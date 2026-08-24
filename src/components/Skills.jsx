@@ -1,15 +1,23 @@
 import { 
   Code2, Server, Database, Cloud, 
   GitBranch, Terminal, TestTube, 
-  Layout, Smartphone, Globe 
+  Layout, Smartphone, Globe, Brain
 } from "lucide-react"
+import { useRef } from "react"
 import { Card, CardContent } from "./ui/card"
 import { cn } from "../lib/utils"
+import { StaggerContainer, AnimatedSection } from "./ui/AnimatedSection"
+import { gsap } from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { useGSAP } from "@gsap/react"
+
+gsap.registerPlugin(ScrollTrigger)
 
 const skillCategories = [
   {
     title: "Frontend",
     icon: Layout,
+    color: "from-blue-500 to-cyan-500",
     skills: [
       { name: "React", level: 95 },
       { name: "TypeScript", level: 90 },
@@ -22,6 +30,7 @@ const skillCategories = [
   {
     title: "Backend",
     icon: Server,
+    color: "from-green-500 to-emerald-500",
     skills: [
       { name: "Node.js", level: 90 },
       { name: "Python", level: 85 },
@@ -34,6 +43,7 @@ const skillCategories = [
   {
     title: "Database & Storage",
     icon: Database,
+    color: "from-purple-500 to-violet-500",
     skills: [
       { name: "PostgreSQL", level: 88 },
       { name: "MongoDB", level: 80 },
@@ -46,6 +56,7 @@ const skillCategories = [
   {
     title: "Cloud & DevOps",
     icon: Cloud,
+    color: "from-orange-500 to-red-500",
     skills: [
       { name: "AWS", level: 80 },
       { name: "Docker", level: 88 },
@@ -58,6 +69,7 @@ const skillCategories = [
   {
     title: "Tools & Testing",
     icon: Terminal,
+    color: "from-pink-500 to-rose-500",
     skills: [
       { name: "Git", level: 95 },
       { name: "Jest/Vitest", level: 85 },
@@ -68,81 +80,107 @@ const skillCategories = [
     ],
   },
   {
-    title: "Other",
-    icon: Code2,
+    title: "Architecture",
+    icon: Brain,
+    color: "from-indigo-500 to-blue-500",
     skills: [
       { name: "System Design", level: 82 },
       { name: "Microservices", level: 78 },
       { name: "WebSockets", level: 85 },
       { name: "GraphQL", level: 82 },
       { name: "WebAssembly", level: 60 },
-      { name: "Electron/Tauri", level: 70 },
+      { name: "Event Driven", level: 75 },
     ],
   },
 ]
 
-export function Skills() {
-  return (
-    <section id="skills" className="py-20 sm:py-28 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            Technical <span className="text-primary">Skills</span>
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Technologies and tools I work with regularly. Always expanding my toolkit.
-          </p>
-        </div>
+function SkillBar({ skill }) {
+  const barRef = useRef(null)
+  const containerRef = useRef(null)
+  
+  useGSAP(() => {
+    gsap.fromTo(barRef.current,
+      { width: 0 },
+      {
+        width: `${skill.level}%`,
+        duration: 1.5,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 95%",
+          once: true,
+        }
+      }
+    )
+  }, { scope: containerRef })
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {skillCategories.map((category, i) => (
-            <Card key={category.title} className="transition-all hover:shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                    <category.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-xl font-semibold">{category.title}</h3>
-                </div>
-                <div className="space-y-4">
-                  {category.skills.map((skill) => (
-                    <div key={skill.name}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium">{skill.name}</span>
-                        <span className="text-muted-foreground">{skill.level}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
-                          style={{ width: "0%" }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+  return (
+    <div ref={containerRef} className="group/skill">
+      <div className="flex justify-between text-sm mb-1.5 transition-colors duration-300 group-hover/skill:text-primary">
+        <span className="font-medium">{skill.name}</span>
+        <span className="text-muted-foreground font-mono">{skill.level}%</span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div
+          ref={barRef}
+          className="h-full rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+          style={{
+            background: `linear-gradient(90deg, hsl(var(--gradient-primary)), hsl(var(--gradient-secondary)))`,
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function SkillCategory({ category }) {
+  return (
+    <Card className="h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 glass-dark border-border/50 group overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <CardContent className="p-6 sm:p-8 relative z-10">
+        <div className="flex items-center gap-4 mb-8">
+          <div className={cn("p-4 rounded-2xl shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3", `bg-gradient-to-br ${category.color}`)}>
+            <category.icon className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold font-serif group-hover:text-primary transition-colors duration-300">
+            {category.title}
+          </h3>
+        </div>
+        
+        <div className="space-y-5">
+          {category.skills.map((skill) => (
+            <SkillBar key={skill.name} skill={skill} />
           ))}
         </div>
+      </CardContent>
+    </Card>
+  )
+}
 
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-center mb-8">Proficiency Legend</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            {[
-              { label: "90-100%", desc: "Expert - Can architect & teach" },
-              { label: "75-89%", desc: "Advanced - Production ready" },
-              { label: "60-74%", desc: "Intermediate - Comfortable" },
-              { label: "< 60%", desc: "Learning - Actively improving" },
-            ].map((item) => (
-              <Card key={item.label} className="text-center">
-                <CardContent className="py-4">
-                  <div className="text-lg font-bold text-primary">{item.label}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{item.desc}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+export function Skills() {
+  return (
+    <section id="skills" className="py-20 sm:py-28 lg:py-32 relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <AnimatedSection variant="fadeUp" className="text-center max-w-3xl mx-auto mb-16 sm:mb-24">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight font-serif mb-6">
+            Technical <span className="gradient-text italic">Arsenal</span>
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Technologies and tools I work with regularly to build high-performance, scalable digital products.
+          </p>
+        </AnimatedSection>
+
+        <StaggerContainer 
+          staggerDelay={0.15} 
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-fr"
+        >
+          {skillCategories.map((category) => (
+            <div key={category.title} className="gsap-stagger-item h-full">
+              <SkillCategory category={category} />
+            </div>
+          ))}
+        </StaggerContainer>
       </div>
     </section>
   )
